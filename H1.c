@@ -7,7 +7,7 @@
 /*---------------functions---------------*/
 /*print the matrix A for debugging purpose
 with n: number of rows
-		 m: number of columns*/
+m: number of columns*/
 void printMatrix(int n, int m, double *A){
 	//printf("\nYour matrix has the form:\n");
 	for (int i = 0; i < n; i++) {
@@ -120,7 +120,8 @@ int main (int argc, char** argv)
 	//set x to the first column of A to start the iteration
 	for (int i = 0; i < n; i++) x[i] = A[i];
 
-	/*perform QR-decomposition*/
+	/*perform QR-decomposition:
+	calculate HH-vectors and R*/
 	for (int j = 0; j < findMin(m-1, n); j++) //min(m-1, n) iteration steps
 	{
 		printf("Iterationstep: %d\n", j);
@@ -155,6 +156,9 @@ int main (int argc, char** argv)
 		the new matrix A*/
 		for (int k = 0; k < n; k++) x[k] = A[(j+1)*n+k];
 
+		printf("\nResulting matrix of the iteration step %d: \n", j);
+		printMatrix(n, m, A);
+
 		/*write the normalized HH vector into the
 		j-th column of A below the diagonal.*/
 		if(j!=(m-1))
@@ -162,7 +166,7 @@ int main (int argc, char** argv)
 			for (int k = (j+1); k < n; k++) A[j*n+k] = v[k]/v[j];
 		}
 
-		printf("\nResulting matrix of the iteration step %d: \n", j);
+		printf("\nResulting matrix of the iteration step %d with HH vectors: \n", j);
 		printMatrix(n, m, A);
 	}
 
