@@ -1,5 +1,3 @@
-//@ Laura Zywietz Rolon
-
 # include <stdio.h>
 # include <stdlib.h>
 # include <math.h>
@@ -12,7 +10,7 @@ void printMatrix(int n, int m, double *A){
 	//printf("\nYour matrix has the form:\n");
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < m; j++) {
-			printf("%lf ", A[j*n+i]);
+			printf("%3.3lf ", A[j*n+i]);
 			if (j==(m-1)){ printf("\n");}
 		}
 	}
@@ -25,7 +23,7 @@ void printVector(int length, double*v){
 	printf("The vector has the form:\n");
 	for (int i = 0; i < length; i++) {
 		if(i==0) printf("( ");
-		printf("%lf ", v[i]);
+		printf("%3.3lf ", v[i]);
 		if(i==(length-1)) printf(")\n");
 	}
 }
@@ -66,6 +64,22 @@ double abs_vec1(double *v, int pos, int length, int squared){
 	if(squared) return res;
 	else return sqrt(res);
 }
+
+double SKP(double*v, double*w, int n, int m, int j, int pos){
+	double res = 0;
+	for (int i = j; i < m; i++) {
+		res += v[i]*Q[pos*n+i];
+	}
+	return sqrt(res);
+}
+
+ void Q_times_vec(double *Q, int c, double *v, double *a, int n, int m, int j){
+	double factor = 1 + a[j]/abs_vec1(a, 0, n, 0);
+	for (int i = 0; i < m; i++) {
+		if(i<j) Q[q*n+i+m] = Q[q*n+i];
+		else Q[q*n+i+m] = Q[q*n+i] -1.*factor*SKP(v,Q,m,pos)*v[i];
+	}
+}
 /*---------------------------------------*/
 
 int main (int argc, char** argv)
@@ -73,6 +87,7 @@ int main (int argc, char** argv)
 	double *A; //container for input matrix A
 	double *v;
 	double *x;
+	double *Q;
 	int n = 0, m = 0; //store number of rows/columns
 
 	/*Read number of rows n, number of columns m and the matrix A itself
@@ -84,17 +99,20 @@ int main (int argc, char** argv)
 	scanf("%d", &m);
 
 	//terminate program if n = 0 or m = 0
-	if(n == 0 || m == 0){
+	if(n == 0 || m == 0)
+	{
 		printf("Error! The number of rows and columns has to be different from zero. Try again.\n");
 		return 1;
 	}
 
 	/*the matrix is columnwise read in to allow for a
 	faster memory access of its columns.*/
-	printf("Please enter the matrix column-wise:\n ");
+	printf("Please enter the matrix column-wise:");
 	A = (double *) malloc(sizeof(double) * n* m);
-	for (int j = 0; j < m; j++) {
-		for (int i = 0; i < n; i++) {
+	for (int j = 0; j < m; j++) //iterate over columns
+	{
+		for (int i = 0; i < n; i++) //iterate over rows
+		{
 			scanf("%lf", &A[j*n+i]);
 		}
 	}
@@ -115,6 +133,15 @@ int main (int argc, char** argv)
 	printf("Your input matrix has the form: \n");
 	printMatrix(n, m, A);
 
+	//allocate quadratic matrix Q with unit vectors R^n as columns of Q
+	Q = (double *) malloc(sizeof(double)*n*n);
+	for (int j = 0; j < n; j++) {
+		for (int i = 0; i < n; i++) {
+			if(i==j) Q[j*n+i] = 1;
+			else Q[j*n+i] = 0;
+		}
+	}
+
 	v = (double *) malloc(sizeof(double)*n); //buffer Householder vector of current iteration step
 	x = (double *) malloc(sizeof(double)*n); //buffer column vector of A at current iteration step
 	//set x to the first column of A to start the iteration
@@ -122,7 +149,7 @@ int main (int argc, char** argv)
 
 	/*perform QR-decomposition:
 	calculate HH-vectors and R*/
-	for (int j = 0; j < findMin(m-1, n); j++) //min(m-1, n) iteration steps
+	for (int j = 0; j <= findMin(m-1, n); j++) //min(m-1, n)+1 iteration steps
 	{
 		printf("Iterationstep: %d\n", j);
 		//printVector(n, x);
@@ -141,10 +168,13 @@ int main (int argc, char** argv)
 
 		//calculate H_j * A_j
 		double abs_v = abs_vec1(v,j,n, 1); //absolute value of HH vector v squared
-		printf("Absolute value HH vector v: %lf\n", abs_v);
-		for (int l = j; l < m; l++) {   //iterate over columns
-			for (int k = j; k < n; k++) { //iterate over rows
-				for (int d = j; d < n; d++) {
+		printf("Absolute value HH vector v: %2.1lf\n", abs_v);
+		for (int l = j; l < m; l++) //iterate over columns
+		{
+			for (int k = j; k < n; k++) //iterate over rows
+			{
+				for (int d = j; d < n; d++)
+				{
 					if(k==d) A[l*n+k] += -2/abs_v*v[k]*v[k]*x[k];
 					else     A[l*n+k] += -2/abs_v*v[k]*v[d]*x[d];
 				}
@@ -156,9 +186,6 @@ int main (int argc, char** argv)
 		the new matrix A*/
 		for (int k = 0; k < n; k++) x[k] = A[(j+1)*n+k];
 
-		printf("\nResulting matrix of the iteration step %d: \n", j);
-		printMatrix(n, m, A);
-
 		/*write the normalized HH vector into the
 		j-th column of A below the diagonal.*/
 		if(j!=(m-1))
@@ -168,12 +195,21 @@ int main (int argc, char** argv)
 
 		printf("\nResulting matrix of the iteration step %d with HH vectors: \n", j);
 		printMatrix(n, m, A);
+
+		/*Part2*/
+		for (int i = 0; i < m; i++) {
+			Q_times_w(Q, i, v/v[j], x, n, m, j);
+		}
 	}
+
+
+
 
 	/*free allocated memory*/
 	free(A);
 	free(v);
 	free(x);
+	free(Q);
 
 	return 0;
 }
