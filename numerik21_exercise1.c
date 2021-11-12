@@ -1,4 +1,4 @@
-/*@author: Laura Zywietz RolÃ³n, Alina Becker*/
+/*@author: Laura Zywietz Rolón, Alina Becker*/
 # include <stdio.h>
 # include <stdlib.h>
 # include <math.h>
@@ -10,12 +10,12 @@ gcc -Wall -pedantic -Wextra -Wno-unused-parameter H1.c -o h1 -lm */
 /*print the matrix A with
 n: number of rows
 m: number of columns*/
-void printMatrix(int n, int m, double *A){
+void printMatrix(int n, int m, double* A) {
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < m; j++) {
-			if(j==0) printf("( ");
-			printf("%3.3lf ", A[j*n+i]);
-			if(j==(m-1)) printf(")\n");
+			if (j == 0) printf("( ");
+			printf("%3.3lf ", A[j * n + i]);
+			if (j == (m - 1)) printf(")\n");
 		}
 	}
 	printf("\n");
@@ -23,24 +23,24 @@ void printMatrix(int n, int m, double *A){
 
 /*print a vector v with length length
 for debugging purpose*/
-void printVector(int length, double*v){
+void printVector(int length, double* v) {
 	printf("The vector has the form:\n");
 	for (int i = 0; i < length; i++) {
-		if(i==0) printf("( ");
+		if (i == 0) printf("( ");
 		printf("%3.3lf ", v[i]);
-		if(i==(length-1)) printf(")\n");
+		if (i == (length - 1)) printf(")\n");
 	}
 }
 
 /*calculate minimum of two numbers a, b*/
-int findMin(int a, int b){
+int findMin(int a, int b) {
 	if (a < b) return a;
 	else return b;
 }
 
 /*determine the sign of a given number a*/
-int sgn(double a){
-	if(a >= 0) return 1;
+int sgn(double a) {
+	if (a >= 0) return 1;
 	else return -1;
 }
 
@@ -48,34 +48,34 @@ int sgn(double a){
 of length n according to the Euclidean norm.
 If squared = 1: return the squared value to avoid
 its calculation afterwars by squaring the root.*/
-double abs_vec(double *A, int pos, int n, int squared){
+double abs_vec(double* A, int pos, int n, int squared) {
 	double res = 0;
 	for (int i = pos; i < n; i++) {
-		res += A[pos*n+i]*A[pos*n+i];
+		res += A[pos * n + i] * A[pos * n + i];
 	}
-	if(squared) return res;
+	if (squared) return res;
 	else return sqrt(res);
 }
 
 /*determine the absolute value of a vector v of length length-pos.
 If squared = 1: return the squared value to avoid
 its calculation afterwars by squaring the root.*/
-double abs_vec1(double *v, int pos, int length, int squared){
+double abs_vec1(double* v, int pos, int length, int squared) {
 	double res = 0;
 	for (int i = pos; i < length; i++) {
-		res += v[i]*v[i];
+		res += v[i] * v[i];
 	}
-	if(squared) return res;
+	if (squared) return res;
 	else return sqrt(res);
 }
 
 //additional functions (not used)
 
-/*calculate scalar product of two vectors a and b of length length*/
-double skp(double *a, double *b, int length){
+/*calculate scalar product of two vectors a and b, one of length length-j*/
+double skp(double* a, double* b, int length, int j) {
 	double res = 0;
-	for (int i = 0; i < length; i++) {
-		res += a[i]*b[i];
+	for (int i = j; i < length; i++) {
+		res += a[i] * b[i];
 	}
 	return res;
 }
@@ -83,49 +83,39 @@ double skp(double *a, double *b, int length){
 /*calculate product of matrix Q with given vector w of dimension n,
 where v depicts the HH-vector of iteration step j,
 A the input matrix A */
-void Q_times_w(double *w, double *v, double *A, int n, int j)
+void Q_times_w(double* w, double* v, double* A, int n, int j)
 {
-	double *tmp_v = (double *) malloc(sizeof(double)*n);
-	/*expand the HH-vector to a vector of dimension n*/
-	for (int i = 0; i < n; i++)
-	{
-		if (i < j) tmp_v[i] = 0;
-		else tmp_v[i] = v[i]/v[j];
-	}
-	printVector(n, tmp_v);
-
-	double factor = 1. + fabs(A[j*n+j])/abs_vec1(A, j, n, 0);
-	double skp_factor = skp(tmp_v, w, n);
+	double factor = 1. + fabs(A[j * n + j]) / abs_vec1(A, j, n, 0);
+	double skp_factor = skp(v, w, n, j);
 	//overwrite vector w with result of computation
-	for (int i = 0; i < n; i++)
+	for (int i = j; i < n; i++)
 	{
-		w[i] = w[i] - factor*skp_factor*tmp_v[i];
+		w[i] = w[i] - factor * skp_factor * v[i];
 	}
-	free(tmp_v);
 }
 /*----------------------------------------------------------------------------*/
 
-int main (int argc, char** argv)
+int main(int argc, char** argv)
 {
-	double *A; //input matrix A
-	double *v; //HH vector of current iteration step j
-	double *x; //j-th column of A
+	double* A; //input matrix A
+	double* v; //HH vector of current iteration step j
+	double* x; //j-th column of A
 	int n = 0, m = 0; //number of rows/columns
 
-	double *Q; //matrix Q
-	double *w; //store 1,...,m unit vectors of R^n temporarily
+	double* Q; //matrix Q
+	double* w; //store 1,...,m unit vectors of R^n temporarily
 
 	/*----------------------Read Matrix from Command Line-----------------------*/
 	/*Read number of rows n, number of columns m and the matrix A itself
 	from console and store them in the corresponding containers.*/
 	printf("Please enter the matrix size:\n");
 	printf("Number of rows: ");
-	scanf("%d", &n);
+	scanf_s("%d", &n);
 	printf("Number of columns: ");
-	scanf("%d", &m);
+	scanf_s("%d", &m);
 
 	//terminate program if n = 0 or m = 0
-	if(n == 0 || m == 0)
+	if (n == 0 || m == 0)
 	{
 		printf("Error! The number of rows and columns has to be different from zero. Try again.\n");
 		return 1;
@@ -134,12 +124,12 @@ int main (int argc, char** argv)
 	/*the matrix is columnwise read in to allow for a
 	faster memory access of its columns.*/
 	printf("Please enter the matrix columnwise: ");
-	A = (double *) malloc(sizeof(double) * n* m);
+	A = (double*)malloc(sizeof(double) * n * m);
 	for (int j = 0; j < m; j++) //iterate over columns
 	{
 		for (int i = 0; i < n; i++) //iterate over rows
 		{
-			scanf("%lf", &A[j*n+i]);
+			scanf_s("%lf", &A[j * n + i]);
 		}
 	}
 
@@ -149,74 +139,74 @@ int main (int argc, char** argv)
 
 	/*---------------------Calculate QR Decomposition of A----------------------*/
 	/*allocate nxn-matrix Q and set it to the unit matrix*/
-	Q = (double *) malloc(sizeof(double)*n*n);
+	Q = (double*)malloc(sizeof(double) * n * n);
 	for (int j = 0; j < n; j++)
 	{
 		for (int i = 0; i < n; i++)
 		{
-			Q[j*n+i] = 0;
-			if(j == i) Q[j*n+i] = 1;
+			Q[j * n + i] = 0;
+			if (j == i) Q[j * n + i] = 1;
 		}
 	}
 
 	/*allocate vector w of size n, and set it to the first column of Q*/
-	w = (double *) malloc(sizeof(double)*n);
+	w = (double*)malloc(sizeof(double) * n);
 	for (int i = 0; i < n; i++) w[i] = Q[i];
 
-	v = (double *) malloc(sizeof(double)*n); //buffer Householder vector of current iteration step
-	x = (double *) malloc(sizeof(double)*n); //buffer column vector of A at current iteration step
+	v = (double*)malloc(sizeof(double) * n); //buffer Householder vector of current iteration step
+	x = (double*)malloc(sizeof(double) * n); //buffer column vector of A at current iteration step
 	//set x to the first column of A to start the iteration
 	for (int i = 0; i < n; i++) x[i] = A[i];
 
 	/*perform QR-decomposition: calculate HH-vectors and R*/
-	for (int j = 0; j <= findMin(m-1, n); j++) //min(m-1, n)+1 iteration steps
+	for (int j = 0; j <= findMin(m - 1, n); j++) //min(m-1, n)+1 iteration steps
 	{
-		double abs = abs_vec(A,j,n, 0); //absolute value of column vector j of A
+		double abs = abs_vec(A, j, n, 0); //absolute value of column vector j of A
 
 		/*calculate Householder vector v for iteration step j*/
 		for (int i = j; i < n; i++)
 		{
-			if(i==j) v[i] = A[j*n+i] + sgn(A[j*n+i])*abs;
-			else     v[i] = A[j*n+i];
+			if (i == j) v[i] = A[j * n + i] + sgn(A[j * n + i]) * abs;
+			else     v[i] = A[j * n + i];
 		}
 
 		//calculate H_j * A_j
-		double abs_v = abs_vec1(v,j,n, 1); //absolute value of HH vector v squared
+		double abs_v = abs_vec1(v, j, n, 1); //absolute value of HH vector v squared
 		for (int l = j; l < m; l++) //iterate over columns
 		{
 			for (int k = j; k < n; k++) //iterate over rows
 			{
 				for (int d = j; d < n; d++)
 				{
-					A[l*n+k] += -2/abs_v*v[k]*v[d]*x[d];
+					A[l * n + k] += -2 / abs_v * v[k] * v[d] * x[d];
 				}
 			}
 			/*set vector x to the next column of A*/
-			for (int k = 0; k < n; k++) x[k] = A[(l+1)*n+k];
+			for (int k = 0; k < n; k++) x[k] = A[(l + 1) * n + k];
 		}
 
 		/*calculate matrix Q for each iteration step j*/
-		for(int l = 0; l < n; l++) //iterate over columns of Q
+		for (int l = 0; l < n; l++) //iterate over columns of Q
 		{
 			//set vector w to transposed column vector
-			for(int i = j; i < n; i++) w[i] = Q[i*n+l];
+			for (int i = j; i < n; i++) w[i] = Q[i * n + l];
 			/*calculate next Q-matrix analogeously to part 1 above, taking the transposition
 			for the final result already into account*/
-			for(int k = j; k < n; k++)
+			for (int k = j; k < n; k++)
 			{
-				for (int d = j; d < n; d++) Q[k*n+l] += -2/abs_v*v[k]*v[d]*w[d];
+				for (int d = j; d < n; d++) Q[k * n + l] += -2 / abs_v * v[k] * v[d] * w[d];
 			}
 		}
 
 		/*reset vector x to the first column of
 		the new matrix A*/
-		for (int k = 0; k < n; k++) x[k] = A[(j+1)*n+k];
+		for (int k = 0; k < n; k++) x[k] = A[(j + 1) * n + k];
 
 		/*write the normalized HH vector into the
 		j-th column of A below the diagonal.*/
-		if(j!=findMin(m-1, n))
+		if (j != findMin(m - 1, n))
 		{
-			for (int k = (j+1); k < n; k++) A[j*n+k] = v[k]/v[j];
+			for (int k = (j + 1); k < n; k++) A[j * n + k] = v[k] / v[j];
 		}
 
 		/*for debugging*/
