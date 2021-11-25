@@ -32,6 +32,21 @@ void printVector(int length, double* v) {
 	}
 }
 
+/*transpose given Matrix A*/
+double* transpose(int n, double* A){
+	double* Z; //Zwischenspeicher
+	Z = (double*)malloc(sizeof(double)*n*n);
+	for (int i = 0; i < n; i++){
+		for (int j = 0; j < i; j++){
+      Z[i * n + j] = A[i * n + j]; //speicher Werte von A zwischen...
+			A[i * n + j] = A[j * n + i]; //da sie hier überschrieben werden...
+			A[j * n + i] = Z[i * n + j]; //greife auf zwischengespeicherte Werte zu
+		}
+	}
+	free(Z);
+	return A;
+}
+
 /*perform matrix multiplication of nxn matrices A, B and store
 the result in AB*/
 void matrix_mul(double* A, double* B, double* AB, int n){
@@ -276,7 +291,16 @@ int main(int argc, char** argv)
 	// 	}
 	// }
 
-  n = 4;
+	printf("Bitte die Matrixdimension eingeben:\n");
+	scanf("%d", &n);
+
+  //terminate program if n = 0
+	if (n == 0)
+	{
+		printf("Fehler: die Dimension darf nicht null sein.\n");
+		return 1;
+	}
+
   A = (double*)malloc(sizeof(double) * n * n);
   // A[0] = -4.;
   // A[1] =0.;
@@ -284,7 +308,7 @@ int main(int argc, char** argv)
   // A[4] = 5.;
   // A[5] = 0.;
   // A[8] = -6.;
-	A[0] = 1.;
+/*	A[0] = 1.;
 	A[1] =2.;
 	A[2] = -2.;
 	A[3] = 8.;
@@ -299,6 +323,19 @@ int main(int argc, char** argv)
       if(i != j) A[i*n+j] = A[j*n+i];
     }
   }
+*/
+
+	//Matrix spaltenweise einlesen (linke untere Dreiecksmatrix)
+	printf("Matrix ab 1.Zeile bis Hauptdiagonale spaltenweise eingeben:\n");
+	A = (double *) malloc(sizeof(double)*n*n);
+	for (int i = 0; i < n; i++){
+		for (int j = 0; j <= i; j++){
+			scanf("%lf", &A[i * n + j]); //Spalten über Hauptdiagonalen
+			if (i != j){
+				A[j * n + i] = A[i * n + j]; //Spalten unter Hauptdiagonalen
+			}
+		}
+	}
 
 	printf("\nYour input matrix has the form: \n");
 	printMatrix(n, n, A);
@@ -481,6 +518,22 @@ int main(int argc, char** argv)
   // get_QR_decomposition(A, Q1, n, m);
 	/*--------------------------------------------------------------------------*/
 
+	/*------------------------------Eigenvektoren bestimmen--------------------------------*/
+	/*printf("Eigenvektoren bestimmen:\n");
+	matrix_mul(P, Qk, A, n);
+	printf("P * Q =\n");
+	printMatrix(n, n, A);
+	double* a;
+	a = (double*)malloc(sizeof(double)*n);
+	for (int i = 0; i < n; i++){
+		for(int j = 0; j < n; j++){
+			a[j] = A[i*n+j];
+		}
+		printf("%d.-ter EV:\n", i+1);
+		printVector(n, a);
+		printf("\n");
+	}*/
+
 	/*free allocated memory*/
 	// free(Qk);
 	// free(Q);
@@ -491,6 +544,7 @@ int main(int argc, char** argv)
   free(x);
   free(y);
   free(w);
+	free(a);
 
 	return 0;
 }
