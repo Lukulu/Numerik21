@@ -32,6 +32,21 @@ void printVector(int length, double* v) {
 	}
 }
 
+/*transpose given Matrix A*/
+double* transpose(int n, double* A){
+	double* Z; //Zwischenspeicher
+	Z = (double*)malloc(sizeof(double)*n*n);
+	for (int i = 0; i < n; i++){
+		for (int j = 0; j < i; j++){
+      Z[i * n + j] = A[i * n + j]; //speicher Werte von A zwischen...
+			A[i * n + j] = A[j * n + i]; //da sie hier überschrieben werden...
+			A[j * n + i] = Z[i * n + j]; //greife auf zwischengespeicherte Werte zu
+		}
+	}
+	free(Z);
+	return A;
+}
+
 /*perform matrix multiplication of nxn matrices A, B and store
 the result in AB*/
 void matrix_mul(double* A, double* B, double* AB, int n){
