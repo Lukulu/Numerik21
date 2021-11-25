@@ -276,7 +276,16 @@ int main(int argc, char** argv)
 	// 	}
 	// }
 
-  n = 4;
+	printf("Bitte die Matrixdimension eingeben:\n");
+	scanf("%d", &n);
+
+  //terminate program if n = 0
+	if (n == 0)
+	{
+		printf("Fehler: die Dimension darf nicht null sein.\n");
+		return 1;
+	}
+
   A = (double*)malloc(sizeof(double) * n * n);
   // A[0] = -4.;
   // A[1] =0.;
@@ -284,7 +293,7 @@ int main(int argc, char** argv)
   // A[4] = 5.;
   // A[5] = 0.;
   // A[8] = -6.;
-	A[0] = 1.;
+/*	A[0] = 1.;
 	A[1] =2.;
 	A[2] = -2.;
 	A[3] = 8.;
@@ -299,6 +308,19 @@ int main(int argc, char** argv)
       if(i != j) A[i*n+j] = A[j*n+i];
     }
   }
+*/
+
+	//Matrix spaltenweise einlesen (linke untere Dreiecksmatrix)
+	printf("Matrix ab 1.Zeile bis Hauptdiagonale spaltenweise eingeben:\n");
+	A = (double *) malloc(sizeof(double)*n*n);
+	for (int i = 0; i < n; i++){
+		for (int j = 0; j <= i; j++){
+			scanf("%lf", &A[i * n + j]); //Spalten über Hauptdiagonalen
+			if (i != j){
+				A[j * n + i] = A[i * n + j]; //Spalten unter Hauptdiagonalen
+			}
+		}
+	}
 
 	printf("\nYour input matrix has the form: \n");
 	printMatrix(n, n, A);
