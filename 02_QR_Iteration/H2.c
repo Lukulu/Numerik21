@@ -481,6 +481,22 @@ int main(int argc, char** argv)
   // get_QR_decomposition(A, Q1, n, m);
 	/*--------------------------------------------------------------------------*/
 
+	/*------------------------------Eigenvektoren bestimmen--------------------------------*/
+	/*printf("Eigenvektoren bestimmen:\n");
+	matrix_mul(P, Qk, A, n);
+	printf("P * Q =\n");
+	printMatrix(n, n, A);
+	double* a;
+	a = (double*)malloc(sizeof(double)*n);
+	for (int i = 0; i < n; i++){
+		for(int j = 0; j < n; j++){
+			a[j] = A[i*n+j];
+		}
+		printf("%d.-ter EV:\n", i+1);
+		printVector(n, a);
+		printf("\n");
+	}*/
+
 	/*free allocated memory*/
 	// free(Qk);
 	// free(Q);
