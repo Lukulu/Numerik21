@@ -82,6 +82,17 @@ double abs_vec(double* A, int pos, int n, int squared) {
 	else return sqrt(res);
 }
 
+double abs_vec2(double* A, int pos, int n, int squared) {
+	double res = 0;
+	for (int i = pos; i < n-1; i++) {
+		res += A[pos * n + i+1] * A[pos * n + i+1];
+		printf("i=%d: %lf\n", i, A[pos * n + i+1]);
+	}
+	printf("\n");
+	if (squared) return res;
+	else return sqrt(res);
+}
+
 /*determine the absolute value of a vector v of length length-pos.
 If squared = 1: return the squared value to avoid
 its calculation afterwars by squaring the root.*/
@@ -265,7 +276,7 @@ int main(int argc, char** argv)
 	// 	}
 	// }
 
-  n = 3;
+  n = 4;
   A = (double*)malloc(sizeof(double) * n * n);
   // A[0] = -4.;
   // A[1] =0.;
@@ -275,10 +286,14 @@ int main(int argc, char** argv)
   // A[8] = -6.;
 	A[0] = 1.;
 	A[1] =2.;
-	A[2] = -1.;
-	A[4] = 1.;
-	A[5] = 2.;
-	A[8] = 1.;
+	A[2] = -2.;
+	A[3] = 8.;
+	A[5] = 3.;
+	A[6] = 6.;
+	A[7] = 4.;
+	A[10] = 5.;
+	A[11] = 8.;
+	A[15] = 7.;
   for (int j = 0; j < n; j++) {
     for (int i = 0; i < n; i++) {
       if(i != j) A[i*n+j] = A[j*n+i];
@@ -322,25 +337,33 @@ int main(int argc, char** argv)
   /*tridiagonalize matrix A*/
   for (int j = 0; j < n-2; j++) //n-2 iteration steps
   {
-    double abs = abs_vec(A, j+1, n, 0); //absolute value of part of column vector j of A
+    double abs = abs_vec2(A, j, n, 0); //absolute value of part of column vector j of A
 		double sum = 0; //sum over elements of HH-vector
 
     /*calculate Householder vector v for iteration step j*/
 		v[j+1] = A[j * n + (j+1)] + sgn(A[j * n + (j+1)]) * abs;
+		printf("%lf\n", A[j * n + (j+1)]);
+		printf("%lf\n", abs);
     for (int i = j+2; i < n; i++)
 		{
 			 v[i] = A[j * n + i];
-			 sum += fabs(v[i]);
+			 // sum += fabs(v[i]);
 		}
-		/*catch the case whether the HH-vector is zero*/
-		if(sum < eps) {
-		  printf("Error! The HH-vector becomes the zero vector!");
-		  return 1;
-		}
+		// /*catch the case whether the HH-vector is zero*/
+		// if(sum < eps) {
+		//   printf("Error! The HH-vector becomes the zero vector!");
+		//   return 1;
+		// }
+
+		printVector(n,v);
+		printf("\n");
+		printVector(n,x);
+		printf("\n");
 
     /*calculate P_j * A_j = A'_j*/
 		double abs_v = abs_vec1(v, j+1, n, 1); //absolute value of HH vector v squared
-    for (int l = j; l < n; l++) //iterate over columns
+		printf("%lf\n", abs_v);
+		for (int l = j; l < n; l++) //iterate over columns
     {
       for (int k = j+1; k < n; k++) //iterate over rows
       {
@@ -353,9 +376,16 @@ int main(int argc, char** argv)
       for (int k = 0; k < n; k++) x[k] = A[(l + 1) * n + k];
     }
 
+		printMatrix(n, n, A);
+
+		printVector(n,y);
+		printf("\n");
     /*calculate A'_j * P_j = P_j * A_j * P_j*/
     /*store first row vector of A' in y*/
-    for (int l = 0; l < n; l++) y[l] = A[l*n];
+    if(j==0) for (int l = 0; l < n; l++) y[l] = A[l*n];
+
+		printVector(n,y);
+		printf("\n");
 
     for (int l = j; l < n; l++) //iterate over columns
     {
@@ -369,6 +399,7 @@ int main(int argc, char** argv)
       /*set vector y to the next row of A*/
       for (int k = 0; k < n; k++) y[k] = A[k * n + (l + 1)];
     }
+		printMatrix(n, n, A);
 
     /*calculate matrix P for each iteration step j*/
     for (int l = 0; l < n; l++) //iterate over columns of P
@@ -377,17 +408,17 @@ int main(int argc, char** argv)
       for (int i = j; i < n; i++) w[i] = P[i * n + l];
       /*calculate next P-matrix analogeously to part 1 above, taking the transposition
       for the final result already into account*/
-      for (int k = j; k < n; k++)
+      for (int k = j+1; k < n; k++)
       {
         for (int d = j+1; d < n; d++) P[k * n + l] += -2 / abs_v * v[k] * v[d] * w[d];
       }
     }
 
     /*reset vector x to the first column of the new matrix A*/
-    for (int k = 0; k < n; k++) x[k] = A[(j + 2) * n + k];
+    for (int k = 0; k < n; k++) x[k] = A[(j + 1) * n + k];
 
     /*reset vector y to the first row of the new matrix A*/
-    for (int l = 0; l < n; l++) y[l] = A[l * n + (j + 2)];
+    for (int l = 0; l < n; l++) y[l] = A[l * n + (j + 1)];
 
     /*reset HH-vector*/
     for (int i = 0; i < j+2; i++) v[i] = 0;
@@ -414,46 +445,46 @@ int main(int argc, char** argv)
 	/*--------------------------------------------------------------------------*/
 
 	/*------------------------------QR-Iteration--------------------------------*/
-	/*allocate nxn-matrix Q and set it to the unit matrix*/
-	double* Qk = (double*)malloc(sizeof(double) * n * n);
-
-	double* Q = (double*)malloc(sizeof(double) * n * n);
-	for (int j = 0; j < n; j++)
-	{
-		for (int i = 0; i < n; i++)
-		{
-			Q[j * n + i] = 0;
-			if (j == i) Q[j * n + i] = 1;
-		}
-	}
-
-	double* R = (double*)malloc(sizeof(double) * n * n);
-
-	int k = 0;
-	while (k < 50)
-	{
-		get_QR_decomp_band_matrix(A, Qk, R, n);
-		printf("Matrix R:\n");
-		printMatrix(n, n, R);
-		printf("Matrix Q:\n");
-		printMatrix(n, n, Qk);
-
-		matrix_mul(R, Qk, A, n);
-		// matrix_mul(Qk, Q, Q, n);
-		k++;
-	}
-	/*print result QR iteration*/
-	printf("\nResulting matrix QR-Iteration:\n");
-	printMatrix(n, n, A);
+	// /*allocate nxn-matrix Q and set it to the unit matrix*/
+	// double* Qk = (double*)malloc(sizeof(double) * n * n);
+	//
+	// double* Q = (double*)malloc(sizeof(double) * n * n);
+	// for (int j = 0; j < n; j++)
+	// {
+	// 	for (int i = 0; i < n; i++)
+	// 	{
+	// 		Q[j * n + i] = 0;
+	// 		if (j == i) Q[j * n + i] = 1;
+	// 	}
+	// }
+	//
+	// double* R = (double*)malloc(sizeof(double) * n * n);
+	//
+	// int k = 0;
+	// while (k < 50)
+	// {
+	// 	get_QR_decomp_band_matrix(A, Qk, R, n);
+	// 	printf("Matrix R:\n");
+	// 	printMatrix(n, n, R);
+	// 	printf("Matrix Q:\n");
+	// 	printMatrix(n, n, Qk);
+	//
+	// 	matrix_mul(R, Qk, A, n);
+	// 	// matrix_mul(Qk, Q, Q, n);
+	// 	k++;
+	// }
+	// /*print result QR iteration*/
+	// printf("\nResulting matrix QR-Iteration:\n");
+	// printMatrix(n, n, A);
 
 	/*perform QR-decomposition*/
   // get_QR_decomposition(A, Q1, n, m);
 	/*--------------------------------------------------------------------------*/
 
 	/*free allocated memory*/
-	free(Qk);
-	free(Q);
-	free(R);
+	// free(Qk);
+	// free(Q);
+	// free(R);
 	free(A);
 	free(P);
   free(v);
