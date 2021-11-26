@@ -64,6 +64,12 @@ int sgn(double a) {
 	else return -1;
 }
 
+/*calculate minimum of two numbers a, b*/
+int findMin(int a, int b) {
+	if (a < b) return a;
+	else return b;
+}
+
 /*determine absolute value of column vector at pos of A
 of length n according to the Euclidean norm.
 If squared = 1: return the squared value to avoid
@@ -238,7 +244,7 @@ void get_QR_decomp_band_matrix(double* A, double* Q, double* R, int n){
   free(v);
 }
 
-/*print the transposed matrix A*/
+/*print the transposed matrix At of A*/
 void transposeMatrix(int n, double *A, double* At){
 	/*initialize result matrix AB to zero matrix*/
 	for (int j = 0; j < n; j++)
@@ -265,77 +271,37 @@ int main(int argc, char** argv)
 	int n = 0; //number of rows & columns
 
 	/*----------------------Read Matrix from Command Line-----------------------*/
-	// /*Read number of rows n, number of columns m and the matrix A itself
-	// from console and store them in the corresponding containers.*/
-	// printf("Please enter the matrix size:\n");
-	// printf("Number of rows and columns: ");
-	// scanf("%d", &n);
-	//
-	// //terminate program if n = 0
-	// if (n == 0)
-	// {
-	// 	printf("Error! The number of rows and columns has to be different from zero.\n");
-	// 	return 1;
-	// }
-	//
-	// /*the matrix is columnwise read in to allow for a
-	// faster memory access of its columns.*/
-	// printf("Please enter the upper diagonal of the matrix columnwise: ");
-	// A = (double*)malloc(sizeof(double) * n * n);
-	// for (int j = 0; j < n; j++) //iterate over columns
-	// {
-	// 	for (int i = j; i < n; i++) //iterate over rows
-	// 	{
-	// 		scanf("%lf", &A[j * n + i]);
-  //     if(i!=j) A[i*n+ j] = A[j * n + i];
-	// 	}
-	// }
+	/*Read number of rows n, number of columns m and the matrix A itself
+	from console and store them in the corresponding containers.*/
+	printf("Please enter the matrix size:\n");
+	printf("Number of rows and columns: ");
+	scanf("%d", &n);
 
-  n = 3;
-  A = (double*)malloc(sizeof(double) * n * n);
-  A[0] = 4.;
-  A[1] =0.;
-  A[2] = 0.;
-  A[4] = -2.;
-  A[5] = 0.;
-  A[8] = 3.;
-	// A[0] = 4.;
-	// A[1] =1.;
-	// A[2] = -2.;
-	// A[3] = 2.;
-	// A[5] = 2.;
-	// A[6] = 0.;
-	// A[7] = 1.;
-	// A[10] = 3.;
-	// A[11] = -2.;
-	// A[15] = -1.;
-	// A[0] = 1.;
-	// A[1] =2.;
-	// A[2] = -2.;
-	// A[3] = 8.;
-	// A[4] = 3.;
-	// A[6] = 6.;
-	// A[7] = 4.;
-	// A[8] = 5.;
-	// A[9] = 8.;
-	// A[12] = 3.;
-	// A[13] = -1.;
-	// A[14] = -4.;
-	// A[18] = 7.;
-	// A[19] = 5.;
-	// A[24] = -3.;
-  for (int j = 0; j < n; j++) {
-    for (int i = 0; i < n; i++) {
-      if(i != j) A[i*n+j] = A[j*n+i];
-    }
-  }
+	//terminate program if n = 0
+	if (n == 0)
+	{
+		printf("Error! The number of rows and columns has to be different from zero.\n");
+		return 1;
+	}
+
+	/*the matrix is columnwise read in to allow for a
+	faster memory access of its columns.*/
+	printf("Please enter the lower diagonal of the matrix columnwise: ");
+	A = (double*)malloc(sizeof(double) * n * n);
+	for (int j = 0; j < n; j++) //iterate over columns
+	{
+		for (int i = j; i < n; i++) //iterate over rows
+		{
+			scanf("%lf", &A[j * n + i]);
+      if(i!=j) A[i*n+ j] = A[j * n + i];
+		}
+	}
 
 	printf("\nYour input matrix has the form: \n");
 	printMatrix(n, n, A);
-  printf("---------------------------------------------------------------\n");
-
 
 	/*----------------------Tridiagonalization----------------------------------*/
+	printf("-----------------------Tridiagonalization------------------------\n");
 	double* P; //matrix P
 	double eps = 1e-8; //check whether the HH-vector is zero, i.e. smaller than eps
 
@@ -383,7 +349,7 @@ int main(int argc, char** argv)
 		-> Input matrix is already diagonal*/
 		if(!not_zero_entries)
 		{
-			printf("\nMatrix already diagonal. HH-vector becomes zero. Iteration is terminated.\n");
+			printf("Matrix already diagonal. HH-vector becomes zero. Iteration is terminated.\n");
 			break;
 		}
 
@@ -443,9 +409,8 @@ int main(int argc, char** argv)
 
   }
 
-	printf("-----------------------Tridiagonalization------------------------\n");
 	/*print tridiagonalized matrix A*/
-  printf("\nResulting tridiagonal matrix A:\n");
+  printf("\nResulting tridiagonal matrix A1:\n");
   printMatrix(n, n, A);
 
   /*print orthogonal matrix P*/
@@ -464,12 +429,11 @@ int main(int argc, char** argv)
 	free(PtA);
 	free(Pt);
 	free(PtAP);
-
-	printf("-----------------------------------------------------------------\n");
 	/*--------------------------------------------------------------------------*/
 
 	/*------------------------------QR-Iteration--------------------------------*/
 	bool no_zero_entry = false;
+	double epsilon = 0.00000001;
 	/*allocate nxn-matrix Qk for iteration step k*/
 	double* Qk = (double*)malloc(sizeof(double) * n * n);
 	/*allocate nxn-matrix Rk for iteration step k*/
@@ -496,13 +460,14 @@ int main(int argc, char** argv)
 	{
 		get_QR_decomp_band_matrix(A, Qk, Rk, n);
 		matrix_mul(Rk, Qk, A, n);
-		// printf("Matrix R:\n");
-		// printMatrix(n, n, Rk);
-		// printf("Matrix Q:\n");
-		// printMatrix(n, n, Qk);
 
 		/*calculate matrix Q=Q_1*..*Q_k for iteration step k*/
 		// matrix_mul(Qk, Q0, Q, n);
+		for (int j = 0; j < n; j++)
+		{
+			for (int i = 0; i < n; i++) Q[j * n + i] = 0;
+		}
+
 		for (int j = 0; j < n; j++)
 		{
 			for (int i = 0; i < n; i++)
@@ -512,7 +477,7 @@ int main(int argc, char** argv)
 				are smaller than eps=1e-8*/
 				if(i != j)
 				{
-					if (fabs(Qk[j*n+i]) > eps) no_zero_entry = true;
+					if (fabs(Qk[j*n+i]) > epsilon) no_zero_entry = true;
 				}
 			}
 		}
@@ -526,21 +491,23 @@ int main(int argc, char** argv)
 				Q0[j*n+i] = Q[j*n+i];
 			}
 		}
-
 		k++; //increase iterations step
+		no_zero_entry = false;
 	}
 
 	/*print result QR iteration*/
 	printf("--------------------------QR-Iteration---------------------------\n");
-	printf("\nResulting matrix QR-Iteration:\n");
+	printf("\nResulting matrix QR-Iteration R:\n");
 	printMatrix(n, n, A);
 
+	// double* Qt = (double*)malloc(sizeof(double) * n * n);
+	// transposeMatrix(n, Q, Qt);
 	printf("\nResulting matrix Q:\n"); //->transposed??
 	printMatrix(n, n, Q);
-	printf("-----------------------------------------------------------------\n");
 	/*--------------------------------------------------------------------------*/
 
 	/*--------------------------Calculate Eigenvectors--------------------------*/
+	printf("-----------------Eigenvectors & Eigenvalues----------------------\n");
 	/*calculate eigenvectors from P*Q from part 1,2 and store the result in Q0*/
 	matrix_mul(P, Q, Q0, n);
 
@@ -548,18 +515,18 @@ int main(int argc, char** argv)
 	printf("\nResulting matrix PQ:\n");
 	printMatrix(n, n, Q0);
 
-	printf("-----------------Eigenvectors & Eigenvalues----------------------\n");
 	/*print eigenvectors (from columns of PQ) and corresponding eigenvalues
 	(from the diagonal of A) obtained from QR-iteration*/
 	for (int j = 0; j < n; j++)
 	{
-		print("%d. Eigenvector to eigenvalue %lf :", j, A[j*n+j]);
+		printf("%d. Eigenvector to eigenvalue %4.2lf :", j, A[j*n+j]);
 		for (int i = 0; i < n; i++)
 		{
 			if(i == 0) printf("( ");
-			if(i==(n-1)) printf(" %lf )\n", Q0[j*n+i]);
-			else printf(" %lf ,");
+			if(i==(n-1)) printf(" %5.3lf )\n", Q0[j*n+i]);
+			else printf(" %5.3lf ,", Q0[j*n+i]);
 		}
+		printf("\n");
 	}
 	printf("-----------------------------------------------------------------\n");
 	/*--------------------------------------------------------------------------*/
