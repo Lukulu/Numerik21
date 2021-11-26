@@ -5,7 +5,7 @@
 # include <stdbool.h>
 
 /*compile command:
-gcc -Wall -pedantic -Wextra -Wno-unused-parameter H2.c -o ex2 -lm */
+gcc -Wall -pedantic -Wextra -Wno-unused-parameter H2_Teilaufgabe1.c -o ex -lm */
 
 /*--------------------------------functions-----------------------------------*/
 /*print the matrix A with
@@ -262,7 +262,7 @@ void transposeMatrix(int n, double *A, double* At){
 int main(int argc, char** argv)
 {
 	double* A; //input matrix A
-	int n = 0; //number of rows/columns
+	int n = 0; //number of rows & columns
 
 	/*----------------------Read Matrix from Command Line-----------------------*/
 	// /*Read number of rows n, number of columns m and the matrix A itself
@@ -274,13 +274,13 @@ int main(int argc, char** argv)
 	// //terminate program if n = 0
 	// if (n == 0)
 	// {
-	// 	printf("Error! The number of rows and columns has to be different from zero. Try again.\n");
+	// 	printf("Error! The number of rows and columns has to be different from zero.\n");
 	// 	return 1;
 	// }
 	//
 	// /*the matrix is columnwise read in to allow for a
 	// faster memory access of its columns.*/
-	// printf("Please enter the lower diagonal of the matrix columnwise: ");
+	// printf("Please enter the upper diagonal of the matrix columnwise: ");
 	// A = (double*)malloc(sizeof(double) * n * n);
 	// for (int j = 0; j < n; j++) //iterate over columns
 	// {
@@ -443,6 +443,7 @@ int main(int argc, char** argv)
 
   }
 
+	printf("-----------------------Tridiagonalization------------------------\n");
 	/*print tridiagonalized matrix A*/
   printf("\nResulting tridiagonal matrix A:\n");
   printMatrix(n, n, A);
@@ -463,49 +464,111 @@ int main(int argc, char** argv)
 	free(PtA);
 	free(Pt);
 	free(PtAP);
+
+	printf("-----------------------------------------------------------------\n");
 	/*--------------------------------------------------------------------------*/
 
 	/*------------------------------QR-Iteration--------------------------------*/
-	// /*allocate nxn-matrix Q and set it to the unit matrix*/
-	// double* Qk = (double*)malloc(sizeof(double) * n * n);
-	//
-	// double* Q = (double*)malloc(sizeof(double) * n * n);
-	// for (int j = 0; j < n; j++)
-	// {
-	// 	for (int i = 0; i < n; i++)
-	// 	{
-	// 		Q[j * n + i] = 0;
-	// 		if (j == i) Q[j * n + i] = 1;
-	// 	}
-	// }
-	//
-	// double* R = (double*)malloc(sizeof(double) * n * n);
-	//
-	// int k = 0;
-	// while (k < 50)
-	// {
-	// 	get_QR_decomp_band_matrix(A, Qk, R, n);
-	// 	printf("Matrix R:\n");
-	// 	printMatrix(n, n, R);
-	// 	printf("Matrix Q:\n");
-	// 	printMatrix(n, n, Qk);
-	//
-	// 	matrix_mul(R, Qk, A, n);
-	// 	// matrix_mul(Qk, Q, Q, n);
-	// 	k++;
-	// }
-	// /*print result QR iteration*/
-	// printf("\nResulting matrix QR-Iteration:\n");
-	// printMatrix(n, n, A);
+	bool no_zero_entry = false;
+	/*allocate nxn-matrix Qk for iteration step k*/
+	double* Qk = (double*)malloc(sizeof(double) * n * n);
+	/*allocate nxn-matrix Rk for iteration step k*/
+	double* Rk = (double*)malloc(sizeof(double) * n * n);
+	/*allocate nxn-matrix Q0 for iteration step 0 and set it to the unit matrix*/
+	double* Q0 = (double*)malloc(sizeof(double) * n * n);
+	for (int j = 0; j < n; j++)
+	{
+		for (int i = 0; i < n; i++)
+		{
+			Q0[j * n + i] = 0;
+			if (j == i) Q0[j * n + i] = 1;
+		}
+	}
+	/*allocate nxn-matrix Q and set it to the zero matrix*/
+	double* Q = (double*)malloc(sizeof(double) * n * n);
+	for (int j = 0; j < n; j++)
+	{
+		for (int i = 0; i < n; i++) Q[j * n + i] = 0;
+	}
 
-	/*perform QR-decomposition*/
-  // get_QR_decomposition(A, Q1, n, m);
+	int k = 0;
+	while (k >= 0)
+	{
+		get_QR_decomp_band_matrix(A, Qk, Rk, n);
+		matrix_mul(Rk, Qk, A, n);
+		// printf("Matrix R:\n");
+		// printMatrix(n, n, Rk);
+		// printf("Matrix Q:\n");
+		// printMatrix(n, n, Qk);
+
+		/*calculate matrix Q=Q_1*..*Q_k for iteration step k*/
+		// matrix_mul(Qk, Q0, Q, n);
+		for (int j = 0; j < n; j++)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				for (int d = 0; d < n; d++) Q[j*n+i] += Qk[d*n+i]*Q0[j*n+d];
+				/*check whether entries of Qk next to the diagonal
+				are smaller than eps=1e-8*/
+				if(i != j)
+				{
+					if (fabs(Qk[j*n+i]) > eps) no_zero_entry = true;
+				}
+			}
+		}
+		/*terminate iteration if all entries of Qk apart from the diagonal are
+		smaller than eps = 1e-8*/
+		if (!no_zero_entry) break;
+
+		/*copy Q into Q0 to start the next iteration step*/
+		for (int j = 0; j < n; j++) {
+			for (int i = 0; i < n; i++) {
+				Q0[j*n+i] = Q[j*n+i];
+			}
+		}
+
+		k++; //increase iterations step
+	}
+
+	/*print result QR iteration*/
+	printf("--------------------------QR-Iteration---------------------------\n");
+	printf("\nResulting matrix QR-Iteration:\n");
+	printMatrix(n, n, A);
+
+	printf("\nResulting matrix Q:\n"); //->transposed??
+	printMatrix(n, n, Q);
+	printf("-----------------------------------------------------------------\n");
+	/*--------------------------------------------------------------------------*/
+
+	/*--------------------------Calculate Eigenvectors--------------------------*/
+	/*calculate eigenvectors from P*Q from part 1,2 and store the result in Q0*/
+	matrix_mul(P, Q, Q0, n);
+
+	/*print P*Q*/
+	printf("\nResulting matrix PQ:\n");
+	printMatrix(n, n, Q0);
+
+	printf("-----------------Eigenvectors & Eigenvalues----------------------\n");
+	/*print eigenvectors (from columns of PQ) and corresponding eigenvalues
+	(from the diagonal of A) obtained from QR-iteration*/
+	for (int j = 0; j < n; j++)
+	{
+		print("%d. Eigenvector to eigenvalue %lf :", j, A[j*n+j]);
+		for (int i = 0; i < n; i++)
+		{
+			if(i == 0) printf("( ");
+			if(i==(n-1)) printf(" %lf )\n", Q0[j*n+i]);
+			else printf(" %lf ,");
+		}
+	}
+	printf("-----------------------------------------------------------------\n");
 	/*--------------------------------------------------------------------------*/
 
 	/*free allocated memory*/
-	// free(Qk);
-	// free(Q);
-	// free(R);
+	free(Qk);
+	free(Rk);
+	free(Q0);
+	free(Q);
 	free(A);
 	free(P);
   free(v);
