@@ -4,7 +4,7 @@
 # include <math.h>
 
 /*compile command:
-gcc -Wall -pedantic -Wextra -Wno-unused-parameter H3.c -o ex -lm */
+gcc -Wall -pedantic -Wextra -Wno-unused-parameter Abgabe_H3.c -o ex -lm */
 
 /*--------------------------------functions-----------------------------------*/
 /*print the matrix A with
@@ -147,12 +147,9 @@ int main(int argc, char** argv)
 	/*----------------------Read Input LSE from Command Line-----------------------*/
 	printf("We want to solve the system of linear equations of the form Ax=b:\n");
 
-	/*Read number of rows n, number of columns m and the matrix A itself
-	from console and store them in the corresponding containers.*/
 	printf("Please enter the dimension of the system: ");
 	scanf("%d", &n);
-
-	//terminate program if n = 0
+	/*terminate program if n = 0*/
 	if (n == 0)
 	{
 		printf("Error! The number of rows and columns has to be different from zero.\n");
@@ -175,18 +172,12 @@ int main(int argc, char** argv)
 	/*Read vector b from the command line*/
 	printf("Please enter your vector b: ");
 	b = (double*)malloc(sizeof(double) * n);
-	for (int i = 0; i < n; i++)
-	{
-		scanf("%lf", &b[i]);
-	}
+	for (int i = 0; i < n; i++) scanf("%lf", &b[i]);
 
 	/*Read vector x from the command line*/
 	printf("Please enter starting value of your solution vector x: ");
 	x = (double*)malloc(sizeof(double) * n);
-	for (int i = 0; i < n; i++)
-	{
-		scanf("%lf", &x[i]);
-	}
+	for (int i = 0; i < n; i++) scanf("%lf", &x[i]);
 
 	/*Print inputs saved from the command line*/
 	printf("Your input matrix A has the form: \n");
@@ -214,22 +205,25 @@ int main(int argc, char** argv)
 	and the matrix R of residues: R = (r_1,r_2,...,r_K)*/
 	double *P;
 	double *R;
-	P = (double*)malloc(sizeof(double) * n * K);
-	R = (double*)malloc(sizeof(double) * n * K);
-	for (int j = 0; j < K; j++)
+	P = (double*)malloc(sizeof(double) * n);
+	R = (double*)malloc(sizeof(double) * n);
+	for (int i = 0; i < n; i++)
 	{
-		for (int i = 0; i < n; i++)
-		{
-			P[j*n+i] = 0;
-			R[j*n+i] = 0;
-		}
+		P[i] = 0;
+		R[i] = 0;
 	}
+
+	/*calculate norm of b*/
+	double norm_r = 0, norm_b = 0;
+	/*calculate norm of b*/
+	norm_b = euclidean_scp(b, b, n);
+	norm_b = sqrt(norm_b);
 
 	/*----------------------Steepest Decent ----------------------------------*/
 	if(alg_num == 1)
 	{
-		printf("Executing Steepest Decent...\n");
-		double norm_r = 0, norm_b = 0;
+		printf("\nExecuting Steepest Decent...\n");
+		printf("------------------------------\n");
 
 		double* Ax = (double*)malloc(sizeof(double)*n);
 		matrix_vector_mul(A, x, Ax, n);
@@ -242,10 +236,6 @@ int main(int argc, char** argv)
 		norm_r = euclidean_scp(r, r, n);
 		norm_r = sqrt(norm_r);
 
-		/*calculate norm of b*/
-		norm_b = euclidean_scp(b, b, n);
-		norm_b = sqrt(norm_b);
-
 		int k = 0;
 		while (norm_r > eta*norm_b && k < K)
 		{
@@ -253,6 +243,11 @@ int main(int argc, char** argv)
 			// printf("------------------------\n");
 			// printf("eta*norm: %e\n", eta*norm_b);
 			// printf("norm_r: %e\n", norm_r);
+			if (k > 0) {
+				P = (double*) realloc(P, sizeof(double)*n*(k+1));
+				R = (double*) realloc(R, sizeof(double)*n*(k+1));
+			}
+
 			double* p = (double*)malloc(sizeof(double)*n);
 			matrix_vector_mul(A, r, p, n);
 
@@ -265,6 +260,7 @@ int main(int argc, char** argv)
 				P[k*n+i] = p[i];
 				R[k*n+i] = r[i];
 			}
+
 			//adjust norm
 			norm_r = euclidean_scp(r, r, n);
 			norm_r = sqrt(norm_r);
@@ -278,10 +274,12 @@ int main(int argc, char** argv)
 		printf("Solution for x:\n");
 		printVector(n, x);
 
-		printf("Number of iteration steps: %d\n", k);
+		printf("\nNumber of iteration steps: %d\n", k);
+		printf("Remaining error: %e\n", norm_r);
+		printf("------------------------------\n");
 
 		/*calculate (R,R) and (P, AP) and print it to the command line*/
-		// print_results_algorithms(R, P, A, n, K);
+		print_results_algorithms(R, P, A, n, k);
 	}
 	/*----------------------Conjugate Gradient--------------------------------*/
   // /*set x to zero*/
@@ -291,8 +289,8 @@ int main(int argc, char** argv)
 
 	if(alg_num == 2)
 	{
-		printf("Executing CG...\n");
-		double norm_r = 0, norm_b = 0;
+		printf("\nExecuting CG...\n");
+		printf("------------------------------\n");
 
 		/*initialize r (residual) and x for the CG algorithm with r = b and x = 0*/
 		double* new_r = (double*)malloc(sizeof(double)*n);
@@ -312,10 +310,6 @@ int main(int argc, char** argv)
 		norm_r = euclidean_scp(r, r, n);
 		norm_r = sqrt(norm_r);
 
-		/*calculate norm of b*/
-		norm_b = euclidean_scp(b, b, n);
-		norm_b = sqrt(norm_b);
-
 		int k = 0;
 		while (norm_r > eta*norm_b && k < K)
 		{
@@ -323,6 +317,11 @@ int main(int argc, char** argv)
 			// printf("------------------------\n");
 			// printf("eta*norm: %e\n", eta*norm_b);
 			// printf("norm_r: %e\n", norm_r);
+			if (k > 0) {
+				P = (double*) realloc(P, sizeof(double)*n*(k+1));
+				R = (double*) realloc(R, sizeof(double)*n*(k+1));
+			}
+
 			double* Ap = (double*)malloc(sizeof(double)*n);
 			matrix_vector_mul(A, p, Ap, n);
 
@@ -356,10 +355,12 @@ int main(int argc, char** argv)
 		printf("Solution for x:\n");
 		printVector(n, x);
 
-		printf("Number of iteration steps: %d\n", k);
+		printf("\nNumber of iteration steps: %d\n", k);
+		printf("Remaining error: %e\n", norm_r);
+		printf("------------------------------\n");
 
 		/*calculate (R,R) and (P, AP) and print it to the command line*/
-		// print_results_algorithms(R, P, A, n, K);
+		print_results_algorithms(R, P, A, n, k);
 	}
 	/*--------------------------------------------------------------------------*/
 
